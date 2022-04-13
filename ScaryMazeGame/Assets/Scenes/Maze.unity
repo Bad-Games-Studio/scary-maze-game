@@ -254,7 +254,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6723443343408043278, guid: e8808596d9d25a14d9650ac8d267c219, type: 3}
       propertyPath: border2.y
-      value: 30
+      value: 50
       objectReference: {fileID: 0}
     - target: {fileID: 6723443343408043278, guid: e8808596d9d25a14d9650ac8d267c219, type: 3}
       propertyPath: border2.z

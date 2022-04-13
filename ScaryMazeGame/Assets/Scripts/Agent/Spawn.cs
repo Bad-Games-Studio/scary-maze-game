@@ -1,10 +1,13 @@
+using System;
 using UnityEngine;
 using UnityEngine.AI;
 
 namespace Agent
 {
-    public class AgentSpawn : MonoBehaviour
+    public class Spawn : MonoBehaviour
     {
+        public Action<NavMeshAgent> OnAgentSpawned;
+        
         public GameObject agent;
 
         private Maze.Generator _mazeGenerator;
@@ -52,6 +55,9 @@ namespace Agent
         {
             var clone = Instantiate(agent, _spawnPosition, Quaternion.identity);
             clone.transform.parent = transform;
+
+            var agentComponent = clone.GetComponent<NavMeshAgent>();
+            OnAgentSpawned?.Invoke(agentComponent);
         }
     }
 }
