@@ -38,15 +38,16 @@ namespace Util
             _agents.Add(agent);
         }
 
+        
         private void Update()
         {
             if (Input.GetKeyDown(KeyCode.Mouse0))
             {
-                DoRaycast();
+                HandleRaycast();
             }
         }
 
-        private void DoRaycast()
+        private void HandleRaycast()
         {
             var ray = _camera.ScreenPointToRay(Input.mousePosition);
             if (!Physics.Raycast(ray, out var hit, raycastMaxLength))
@@ -54,9 +55,19 @@ namespace Util
                 return;
             }
 
+            if (!hit.transform.TryGetComponent<Maze.Navigable>(out _))
+            {
+                return;
+            }
+            
+            SetNewDestination(hit.point);
+        }
+
+        private void SetNewDestination(Vector3 newDestination)
+        {
             foreach (var agent in _agents)
             {
-                agent.destination = hit.point;
+                agent.destination = newDestination;
             }
         }
     }
