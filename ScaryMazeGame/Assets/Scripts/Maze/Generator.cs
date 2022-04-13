@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace Maze
 {
@@ -16,6 +18,11 @@ namespace Maze
         public GameObject wallPrefab;
         public GameObject entrancePlatformPrefab;
 
+        
+        public event Action<NavMeshSurface> OnSurfaceCreated;
+        public event Action OnGenerationFinished;
+        public event Action<GameObject> OnEntrancePlatformCreated;
+
 
         private Vector3 _mazeCenterPosition;
         private Vector3 _localCenterOffset;
@@ -24,13 +31,19 @@ namespace Maze
         private Vector3 _entrancePlatformScale;
         private Vector3 _floorScale;
 
+        
         private void Awake()
         {
-            CalculateCenterOffset();
+            PrecalculateOffsets();
+            PrecalculateScales();
+        }
+
+        public void Start()
+        {
             CreateMaze();
         }
 
-        private void CalculateCenterOffset()
+        private void PrecalculateOffsets()
         {
             _mazeCenterPosition = transform.position;
             _localCenterOffset = new Vector3
@@ -39,7 +52,10 @@ namespace Maze
                 y = 0,
                 z = cellScale.z * sourceMaze.height / 2.0f
             };
+        }
 
+        private void PrecalculateScales()
+        {
             _wallScale = cellScale;
             _entrancePlatformScale = new Vector3
             {
@@ -55,6 +71,7 @@ namespace Maze
             };
         }
         
+            
         private void CreateMaze()
         {
             for (var y = 0; y < sourceMaze.height; ++y)
@@ -66,6 +83,8 @@ namespace Maze
             }
 
             InstantiateFloor();
+            
+            OnGenerationFinished?.Invoke();
         }
 
         private void HandleCell(int x, int y)
@@ -142,6 +161,7 @@ namespace Maze
             return position - _localCenterOffset + _mazeCenterPosition;
         }
 
+        
         private void InstantiateWall(int x, int y)
         {
             InstantiateMazePart(wallPrefab, WallPositionAt(x, y), _wallScale);
@@ -149,7 +169,10 @@ namespace Maze
         
         private void InstantiateEntrance(int x, int y)
         {
-            InstantiateMazePart(entrancePlatformPrefab, EntrancePositionAt(x, y), _entrancePlatformScale);
+            var entrance = InstantiateMazePart(
+                entrancePlatformPrefab, EntrancePositionAt(x, y), _entrancePlatformScale);
+            
+            OnEntrancePlatformCreated?.Invoke(entrance);
         }
 
         private void InstantiateFloor()
@@ -163,12 +186,16 @@ namespace Maze
             InstantiateMazePart(floorPrefab, position, _floorScale);
         }
 
-        private void InstantiateMazePart(GameObject prefab, Vector3 position, Vector3 scale)
+        private GameObject InstantiateMazePart(GameObject prefab, Vector3 position, Vector3 scale)
         {
             var clone = Instantiate(prefab, position, Quaternion.identity);
             clone.transform.localScale = scale;
             clone.isStatic = true;
             clone.transform.parent = transform;
+            
+            OnSurfaceCreated?.Invoke(clone.GetComponent<NavMeshSurface>());
+
+            return clone;
         }
     }
 }
